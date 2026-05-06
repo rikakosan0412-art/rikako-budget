@@ -137,7 +137,7 @@ function App() {
 
   // Determine title based on active tab
   let pageTitle = "Rikako Budget";
-  if (activeTab === 'analysis') pageTitle = "細かい分析";
+  if (activeTab === 'analysis') pageTitle = "分析";
   if (activeTab === 'settings') pageTitle = "設定";
 
   return (
@@ -175,14 +175,14 @@ function App() {
               style={{ textAlign: 'left', padding: '12px 16px', fontSize: '1rem', display: 'flex', gap: '12px', alignItems: 'center' }}
               onClick={() => navigateTo('record')}
             >
-              <IconRecord /> 記録する
+              <IconRecord /> 記録
             </button>
             <button 
               className={`btn ${activeTab === 'analysis' ? 'btn-primary' : 'btn-secondary'}`}
               style={{ textAlign: 'left', padding: '12px 16px', fontSize: '1rem', display: 'flex', gap: '12px', alignItems: 'center' }}
               onClick={() => navigateTo('analysis')}
             >
-              <IconAnalysis /> 細かい分析
+              <IconAnalysis /> 分析
             </button>
             <button 
               className={`btn ${activeTab === 'settings' ? 'btn-primary' : 'btn-secondary'}`}
