@@ -21,6 +21,7 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
   const [ocrError, setOcrError] = useState('');
   const [textInput, setTextInput] = useState('');
   const [isTextLoading, setIsTextLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const fileInputRef = useRef(null);
 
   // Update defaults when settings change
@@ -123,6 +124,39 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
     }
   };
 
+  const startListening = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("お使いのブラウザは音声入力に対応していません。");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ja-JP';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setTextInput((prev) => prev ? `${prev} ${transcript}` : transcript);
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error", event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!amount || Number(amount) <= 0) return;
@@ -170,32 +204,42 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         
-        {/* OCR Button Section */}
+        {/* AI Input Section */}
         {type === 'expense' && (
           <div className="form-group" style={{ marginBottom: '0.5rem', background: 'rgba(255,255,255,0.4)', padding: '12px', borderRadius: '8px' }}>
-            <input 
-              type="file" 
-              accept="image/*" 
-              capture="environment" 
-              ref={fileInputRef}
-              style={{ display: 'none' }} 
-              onChange={handleReceiptUpload}
-            />
-            <button 
-              type="button" 
-              className={`btn ${isOcrLoading ? 'btn-secondary' : 'btn-primary'}`}
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isOcrLoading || isTextLoading}
-              style={{ width: '100%', padding: '12px', fontSize: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
-            >
-              {isOcrLoading ? '⏳ 読み取り中...' : '📸 レシートを撮影して自動入力'}
-            </button>
-            
-            <div style={{ margin: '12px 0', borderBottom: '1px solid rgba(0,0,0,0.1)', position: 'relative' }}>
-              <span style={{ position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)', background: 'var(--bg-main)', padding: '0 8px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>または</span>
+            <div className="flex gap-2">
+              {/* Receipt Button */}
+              <input 
+                type="file" 
+                accept="image/*" 
+                capture="environment" 
+                ref={fileInputRef}
+                style={{ display: 'none' }} 
+                onChange={handleReceiptUpload}
+              />
+              <button 
+                type="button" 
+                className="btn btn-secondary"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isOcrLoading || isTextLoading}
+                style={{ flex: 1, padding: '10px', fontSize: '0.9rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', background: 'white', color: 'var(--text-main)', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
+              >
+                {isOcrLoading ? '⏳ 解析中...' : '📸 レシート'}
+              </button>
+
+              {/* Voice Button */}
+              <button 
+                type="button" 
+                className="btn btn-secondary"
+                onClick={startListening}
+                disabled={isListening || isOcrLoading || isTextLoading}
+                style={{ width: 'auto', padding: '0 16px', fontSize: '0.9rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', background: isListening ? '#fee2e2' : 'white', color: isListening ? '#ef4444' : 'var(--text-main)', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
+              >
+                {isListening ? '🎙️ 録音中...' : '🎤 音声'}
+              </button>
             </div>
             
-            <div className="flex gap-2" style={{ marginTop: '16px' }}>
+            <div className="flex gap-2" style={{ marginTop: '12px' }}>
               <input 
                 type="text" 
                 placeholder="例: 昨日スタバで600円" 
@@ -212,7 +256,7 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
                 disabled={isTextLoading || isOcrLoading || !textInput.trim()}
                 style={{ width: 'auto', flexShrink: 0, padding: '0 16px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
               >
-                {isTextLoading ? '解析中' : '💬 入力'}
+                {isTextLoading ? '解析中' : '💬 解析'}
               </button>
             </div>
 
