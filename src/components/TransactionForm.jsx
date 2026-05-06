@@ -1,3 +1,4 @@
+// Trigger redeploy for Vercel Environment Variables
 import React, { useState, useEffect, useRef } from 'react';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../constants/categories';
 import { parseReceipt } from '../lib/geminiClient';
