@@ -93,3 +93,73 @@ export async function parseReceipt(imageFile) {
     throw new Error("エラー詳細: " + (error.message || error));
   }
 }
+
+/**
+ * Parses free text to extract expense information.
+ * @param {string} textInput - The user's input text
+ * @returns {Promise<{date: string, amount: number, memo: string, majorCategory: string, subCategory: string, payer: string}>}
+ */
+export async function parseText(textInput) {
+  if (!genAI) {
+    throw new Error("Gemini API key is not configured.");
+  }
+
+  const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+
+  const prompt = `
+あなたは優秀な家計簿アシスタントです。
+以下のユーザーのつぶやき（自然言語）から、支出の情報を抽出し、JSON形式で返してください。
+
+つぶやき: "${textInput}"
+
+抽出する項目:
+1. date: 支払った日付。YYYY-MM-DD形式。指定がなければ本日の日付。
+2. amount: 金額。数値のみ。
+3. memo: 購入したものの概要。
+4. majorCategory: 内容から推測される大カテゴリ。
+5. subCategory: 内容から推測される小カテゴリ。
+6. payer: 誰が支払ったか。Rikakoなど女性名なら"person1"、Sanariなど男性名なら"person2"。不明ならnull。
+
+【選択可能なカテゴリリスト（大カテゴリ: 小カテゴリの候補）】
+- 食費: 食料品, 外食, 間食, その他
+- 日用品: 美容, その他
+- 交通費: 航空券, 在来線, 新幹線, 車, ガソリン, 高速, 駐車場, その他
+- 趣味: 衣服, 嗜好品, スキー, 映画, 登山, 家具, 乗馬, 旅行, 飲み会, 本, その他
+- 家賃: その他
+- 光熱費: 水道, ガス, 電気, 通信, その他
+- 医療: その他
+- その他: その他
+
+レスポンスは以下のフォーマットのJSONのみを出力してください（マークダウンのバッククオートなどは含めないでください）。
+{
+  "date": "2024-05-01",
+  "amount": 1500,
+  "memo": "スタバでコーヒー",
+  "majorCategory": "食費",
+  "subCategory": "外食",
+  "payer": "person1"
+}
+  `.trim();
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    const cleanedText = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    const parsedData = JSON.parse(cleanedText);
+    
+    return {
+      date: parsedData.date || new Date().toISOString().split('T')[0],
+      amount: Number(parsedData.amount) || 0,
+      memo: parsedData.memo || textInput,
+      majorCategory: parsedData.majorCategory || null,
+      subCategory: parsedData.subCategory || null,
+      payer: parsedData.payer || null
+    };
+  } catch (error) {
+    console.error("Error parsing text:", error);
+    throw new Error("文章の解釈に失敗しました。: " + (error.message || error));
+  }
+}
+
