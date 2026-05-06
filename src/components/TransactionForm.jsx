@@ -203,14 +203,14 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
                 onChange={(e) => setTextInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleTextSubmit(); } }}
                 disabled={isTextLoading || isOcrLoading}
-                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.9rem' }}
+                style={{ flex: 1, minWidth: 0, padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.9rem' }}
               />
               <button 
                 type="button" 
                 className={`btn ${isTextLoading ? 'btn-secondary' : 'btn-primary'}`}
                 onClick={handleTextSubmit}
                 disabled={isTextLoading || isOcrLoading || !textInput.trim()}
-                style={{ padding: '0 16px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', minWidth: '80px' }}
+                style={{ width: 'auto', flexShrink: 0, padding: '0 16px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
               >
                 {isTextLoading ? '解析中' : '💬 入力'}
               </button>
