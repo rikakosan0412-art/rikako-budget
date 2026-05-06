@@ -37,19 +37,19 @@ const SettingsView = ({ settings, onUpdateSettings, transactions, onClearData })
       alert('エクスポートするデータがありません。');
       return;
     }
-    const headers = ['id', 'type', 'date', 'payer', 'amount', 'category', 'forWhom', 'memo'];
+    const headers = ['日付', '誰が', '誰の', '金額', 'カテゴリ', '詳細', 'メモ'];
     const csvContent = [
       headers.join(','),
       ...transactions.map(t => {
         const payerName = t.payer === 'person1' ? person1 : t.payer === 'person2' ? person2 : t.payer;
         const forWhomName = t.forWhom === 'person1' ? person1 : t.forWhom === 'person2' ? person2 : t.forWhom === 'both' ? 'ふたり' : (t.forWhom || '');
         return [
-          t.id, t.type, t.date, payerName, t.amount, t.category, forWhomName, `"${t.memo || ''}"`
+          t.date, payerName, forWhomName, t.amount, t.majorCategory || '', t.subCategory || '', `"${t.memo || ''}"`
         ].join(',');
       })
     ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -105,14 +105,14 @@ const SettingsView = ({ settings, onUpdateSettings, transactions, onClearData })
         
         <div className="flex gap-4">
           <div className="form-group" style={{ flex: 1 }}>
-            <label className="form-label">支払った人</label>
+            <label className="form-label">誰が</label>
             <select value={payer} onChange={e => setPayer(e.target.value)}>
               <option value="person1">{person1}</option>
               <option value="person2">{person2}</option>
             </select>
           </div>
           <div className="form-group" style={{ flex: 1 }}>
-            <label className="form-label">誰のため</label>
+            <label className="form-label">誰の</label>
             <select value={forWhom} onChange={e => setForWhom(e.target.value)}>
               <option value="both">ふたり</option>
               <option value="person1">{person1}</option>
@@ -123,13 +123,13 @@ const SettingsView = ({ settings, onUpdateSettings, transactions, onClearData })
 
         <div className="flex gap-4">
           <div className="form-group" style={{ flex: 1 }}>
-            <label className="form-label">支出カテゴリ (大)</label>
+            <label className="form-label">カテゴリ</label>
             <select value={expenseMajor} onChange={handleMajorChange}>
               {Object.keys(EXPENSE_CATEGORIES).map(k => <option key={k} value={k}>{k}</option>)}
             </select>
           </div>
           <div className="form-group" style={{ flex: 1 }}>
-            <label className="form-label">支出カテゴリ (小)</label>
+            <label className="form-label">詳細</label>
             <select value={expenseMinor} onChange={e => setExpenseMinor(e.target.value)}>
               {(EXPENSE_CATEGORIES[expenseMajor] || []).map(k => <option key={k} value={k}>{k}</option>)}
             </select>
