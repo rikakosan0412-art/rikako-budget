@@ -35,8 +35,8 @@ export async function parseReceipt(imageFile) {
     throw new Error("Gemini API key is not configured.");
   }
 
-  // Use the flash-latest model to avoid 404 errors
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+  // Use the flash model which is faster and great for multmodal tasks
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const prompt = `
 あなたは優秀な家計簿アシスタントです。
