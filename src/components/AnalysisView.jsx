@@ -51,8 +51,6 @@ const AnalysisView = ({ transactions, settings }) => {
   const targetBudget = filterType === 'month' ? budget : budget * 12;
   const budgetRemaining = targetBudget - totalExpense;
 
-  let balance = 0; 
-
   // Category breakdown logic
   const categoryData = {};
 
