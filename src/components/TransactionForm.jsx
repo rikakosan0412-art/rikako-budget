@@ -74,6 +74,10 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
       if (result.amount) setAmount(result.amount.toString());
       if (result.memo) setMemo(result.memo);
       
+      // Update categories if predicted
+      if (result.majorCategory) setMajorCategory(result.majorCategory);
+      if (result.subCategory) setSubCategory(result.subCategory);
+      
       if (type === 'income') {
         handleTypeChange('expense');
       }
