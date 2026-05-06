@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import TransactionList from './TransactionList';
 
 const COLORS = [
   '#4f46e5', '#10b981', '#f59e0b', '#ef4444', 
@@ -184,6 +185,24 @@ const AnalysisView = ({ transactions, settings }) => {
     ? `${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月`
     : `${currentDate.getFullYear()}年`;
 
+  let displayTransactions = filteredTransactions;
+  
+  if (personFilter !== 'all') {
+    if (personFilter === 'both') {
+      displayTransactions = displayTransactions.filter(t => t.type === 'expense' && t.forWhom === 'both');
+    } else {
+      displayTransactions = displayTransactions.filter(t => {
+        if (t.type === 'income') return t.payer === personFilter;
+        if (t.type === 'expense') return t.forWhom === personFilter || t.forWhom === 'both';
+        return false;
+      });
+    }
+  }
+
+  if (selectedMajor !== null) {
+    displayTransactions = displayTransactions.filter(t => t.type === 'expense' && (t.majorCategory || t.category || 'その他') === selectedMajor);
+  }
+
   return (
     <div style={{ animation: 'fadeIn 0.3s ease' }}>
       
@@ -338,6 +357,15 @@ const AnalysisView = ({ transactions, settings }) => {
         )}
       </div>
 
+      {/* 取引一覧 (絞り込み連動) */}
+      <div style={{ marginTop: '24px' }}>
+        <TransactionList 
+          title={selectedMajor ? `「${selectedMajor}」の取引` : 'この期間の取引一覧'}
+          transactions={displayTransactions} 
+          settings={settings} 
+          // onDeleteTransaction は渡さないことで削除ボタンを非表示にする
+        />
+      </div>
     </div>
   );
 };

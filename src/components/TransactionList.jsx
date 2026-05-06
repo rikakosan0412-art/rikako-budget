@@ -1,10 +1,10 @@
 import React from 'react';
 
-const TransactionList = ({ transactions, onDeleteTransaction, settings }) => {
+const TransactionList = ({ transactions, onDeleteTransaction, settings, title }) => {
   const person1 = settings?.person1Name || 'Rikako';
   const person2 = settings?.person2Name || 'Sanari';
 
-  const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const sortedTransactions = transactions;
 
   const formatter = new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' });
 
@@ -29,7 +29,7 @@ const TransactionList = ({ transactions, onDeleteTransaction, settings }) => {
 
   return (
     <div className="glass-panel">
-      <h3 className="mb-4 text-gradient">最近の記録</h3>
+      <h3 className="mb-4 text-gradient">{title || '最近の記録'}</h3>
       {sortedTransactions.length === 0 ? (
         <p className="text-muted" style={{ textAlign: 'center', padding: '20px 0' }}>記録がありません</p>
       ) : (
@@ -66,12 +66,14 @@ const TransactionList = ({ transactions, onDeleteTransaction, settings }) => {
                     {t.type === 'expense' ? '支出' : '収入'}
                   </span>
                 </div>
-                <button 
-                  onClick={() => onDeleteTransaction(t.id)}
-                  style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '4px' }}
-                >
-                  ✕
-                </button>
+                {onDeleteTransaction && (
+                  <button 
+                    onClick={() => onDeleteTransaction(t.id)}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '4px' }}
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
             </div>
           ))}
