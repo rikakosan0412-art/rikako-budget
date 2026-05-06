@@ -1,7 +1,7 @@
 // Trigger redeploy for Vercel Environment Variables
 import React, { useState, useEffect, useRef } from 'react';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../constants/categories';
-import { parseReceipt } from '../lib/geminiClient';
+import { parseReceipt, parseText } from '../lib/geminiClient';
 
 const TransactionForm = ({ onAddTransaction, settings }) => {
   const person1 = settings?.person1Name || 'Rikako';
@@ -19,6 +19,8 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
 
   const [isOcrLoading, setIsOcrLoading] = useState(false);
   const [ocrError, setOcrError] = useState('');
+  const [textInput, setTextInput] = useState('');
+  const [isTextLoading, setIsTextLoading] = useState(false);
   const fileInputRef = useRef(null);
 
   // Update defaults when settings change
@@ -91,6 +93,36 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
     }
   };
 
+  const handleTextSubmit = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!textInput.trim()) return;
+
+    setIsTextLoading(true);
+    setOcrError('');
+    
+    try {
+      const result = await parseText(textInput);
+      
+      if (result.date) setDate(result.date);
+      if (result.amount) setAmount(result.amount.toString());
+      if (result.memo) setMemo(result.memo);
+      if (result.majorCategory) setMajorCategory(result.majorCategory);
+      if (result.subCategory) setSubCategory(result.subCategory);
+      if (result.payer) setPayer(result.payer);
+      
+      if (type === 'income') {
+        handleTypeChange('expense');
+      }
+
+      setTextInput(''); // 成功したらクリア
+    } catch (err) {
+      setOcrError(err.message || '文章の読み取りに失敗しました。');
+      console.error(err);
+    } finally {
+      setIsTextLoading(false);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!amount || Number(amount) <= 0) return;
@@ -140,7 +172,7 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
         
         {/* OCR Button Section */}
         {type === 'expense' && (
-          <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+          <div className="form-group" style={{ marginBottom: '0.5rem', background: 'rgba(255,255,255,0.4)', padding: '12px', borderRadius: '8px' }}>
             <input 
               type="file" 
               accept="image/*" 
@@ -153,11 +185,37 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
               type="button" 
               className={`btn ${isOcrLoading ? 'btn-secondary' : 'btn-primary'}`}
               onClick={() => fileInputRef.current?.click()}
-              disabled={isOcrLoading}
+              disabled={isOcrLoading || isTextLoading}
               style={{ width: '100%', padding: '12px', fontSize: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
             >
               {isOcrLoading ? '⏳ 読み取り中...' : '📸 レシートを撮影して自動入力'}
             </button>
+            
+            <div style={{ margin: '12px 0', borderBottom: '1px solid rgba(0,0,0,0.1)', position: 'relative' }}>
+              <span style={{ position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)', background: 'var(--bg-main)', padding: '0 8px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>または</span>
+            </div>
+            
+            <div className="flex gap-2" style={{ marginTop: '16px' }}>
+              <input 
+                type="text" 
+                placeholder="例: 昨日スタバで600円" 
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleTextSubmit(); } }}
+                disabled={isTextLoading || isOcrLoading}
+                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.9rem' }}
+              />
+              <button 
+                type="button" 
+                className={`btn ${isTextLoading ? 'btn-secondary' : 'btn-primary'}`}
+                onClick={handleTextSubmit}
+                disabled={isTextLoading || isOcrLoading || !textInput.trim()}
+                style={{ padding: '0 16px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', minWidth: '80px' }}
+              >
+                {isTextLoading ? '解析中' : '💬 入力'}
+              </button>
+            </div>
+
             {ocrError && <p style={{ color: 'red', fontSize: '0.85rem', marginTop: '0.5rem', textAlign: 'center' }}>{ocrError}</p>}
           </div>
         )}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import TransactionList from './TransactionList';
 
 const COLORS = [
@@ -114,17 +114,45 @@ const AnalysisView = ({ transactions, settings }) => {
 
   // Prepare data for Recharts
   let chartData = [];
-  if (selectedMajor === null) {
-    // Show Major Categories
-    chartData = Object.entries(categoryData)
-      .map(([name, data]) => ({ name, value: data.total }))
-      .sort((a, b) => b.value - a.value);
+  let monthlyChartData = [];
+  const majorCategoriesSet = new Set();
+
+  if (filterType === 'month') {
+    if (selectedMajor === null) {
+      chartData = Object.entries(categoryData)
+        .map(([name, data]) => ({ name, value: data.total }))
+        .sort((a, b) => b.value - a.value);
+    } else {
+      const subs = categoryData[selectedMajor]?.subs || {};
+      chartData = Object.entries(subs)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value);
+    }
   } else {
-    // Show Minor Categories for selected Major Category
-    const subs = categoryData[selectedMajor]?.subs || {};
-    chartData = Object.entries(subs)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value);
+    const monthlyMap = {};
+    expenses.forEach(exp => {
+      const d = new Date(exp.date);
+      const monthKey = `${d.getMonth() + 1}月`;
+      const major = exp.majorCategory || exp.category || 'その他';
+      majorCategoriesSet.add(major);
+      
+      if (!monthlyMap[monthKey]) {
+        monthlyMap[monthKey] = { name: monthKey };
+      }
+      if (!monthlyMap[monthKey][major]) {
+        monthlyMap[monthKey][major] = 0;
+      }
+      monthlyMap[monthKey][major] += Number(exp.amount);
+    });
+
+    for (let i = 0; i < 12; i++) {
+      const monthKey = `${i + 1}月`;
+      if (!monthlyMap[monthKey]) {
+        monthlyChartData.push({ name: monthKey });
+      } else {
+        monthlyChartData.push(monthlyMap[monthKey]);
+      }
+    }
   }
 
   const handlePieClick = (data, index) => {
@@ -279,13 +307,13 @@ const AnalysisView = ({ transactions, settings }) => {
         </div>
       </div>
 
-      {/* カテゴリ別の円グラフ分析 */}
+      {/* カテゴリ別の円グラフ・棒グラフ分析 */}
       <div className="glass-panel mb-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-gradient" style={{ margin: 0 }}>
-            支出の詳細分析 {selectedMajor ? `(${selectedMajor}の内訳)` : ''}
+            支出の詳細分析 {selectedMajor && filterType === 'month' ? `(${selectedMajor}の内訳)` : ''}
           </h3>
-          {selectedMajor && (
+          {selectedMajor && filterType === 'month' && (
             <button 
               className="btn btn-secondary" 
               style={{ padding: '6px 12px', fontSize: '0.8rem', width: 'auto' }}
@@ -296,40 +324,64 @@ const AnalysisView = ({ transactions, settings }) => {
           )}
         </div>
 
-        {chartData.length === 0 ? (
-          <p className="text-muted text-center py-4">この期間の支出データがありません</p>
+        {filterType === 'month' ? (
+          chartData.length === 0 ? (
+            <p className="text-muted text-center py-4">この期間の支出データがありません</p>
+          ) : (
+            <>
+              {!selectedMajor && (
+                <p className="text-muted" style={{ fontSize: '0.8rem', textAlign: 'center', marginBottom: '8px' }}>
+                  ※ グラフをタップすると内訳が見られます
+                </p>
+              )}
+              <div style={{ width: '100%', height: '300px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={renderCustomizedLabel}
+                      outerRadius={110}
+                      innerRadius={40}
+                      fill="#8884d8"
+                      dataKey="value"
+                      onClick={handlePieClick}
+                      style={{ cursor: selectedMajor === null ? 'pointer' : 'default', outline: 'none' }}
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} style={{ outline: 'none' }} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </>
+          )
         ) : (
-          <>
-            {!selectedMajor && (
-              <p className="text-muted" style={{ fontSize: '0.8rem', textAlign: 'center', marginBottom: '8px' }}>
-                ※ グラフをタップすると内訳が見られます
-              </p>
-            )}
-            <div style={{ width: '100%', height: '300px' }}>
+          <div style={{ width: '100%', height: '350px', marginTop: '16px' }}>
+            {expenses.length === 0 ? (
+              <p className="text-muted text-center py-4">この期間の支出データがありません</p>
+            ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={renderCustomizedLabel}
-                    outerRadius={110}
-                    innerRadius={40}
-                    fill="#8884d8"
-                    dataKey="value"
-                    onClick={handlePieClick}
-                    style={{ cursor: selectedMajor === null ? 'pointer' : 'default', outline: 'none' }}
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} style={{ outline: 'none' }} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
+                <BarChart data={monthlyChartData} margin={{ top: 20, right: 0, left: -20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
+                  <YAxis axisLine={false} tickLine={false} tickFormatter={(value) => `¥${(value/10000).toFixed(0)}万`} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
+                  <Tooltip 
+                    formatter={(value) => formatter.format(value)}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: '0.8rem', marginTop: '10px' }} />
+                  {Array.from(majorCategoriesSet).map((category, index) => (
+                    <Bar key={category} dataKey={category} stackId="a" fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </BarChart>
               </ResponsiveContainer>
-            </div>
-          </>
+            )}
+          </div>
         )}
       </div>
 
