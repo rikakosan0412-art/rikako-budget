@@ -35,8 +35,8 @@ export async function parseReceipt(imageFile) {
     throw new Error("Gemini API key is not configured.");
   }
 
-  // Use the flash model which is faster and great for multmodal tasks
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  // Use gemini-flash-latest which has been verified to work with the user's API key
+  const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
   const prompt = `
 あなたは優秀な家計簿アシスタントです。
