@@ -74,6 +74,6 @@ export async function parseReceipt(imageFile) {
     };
   } catch (error) {
     console.error("Error parsing receipt:", error);
-    throw new Error("レシートの読み取りに失敗しました。画像が不鮮明か、形式が異なる可能性があります。");
+    throw new Error("エラー詳細: " + (error.message || error));
   }
 }
