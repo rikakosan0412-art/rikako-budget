@@ -65,7 +65,7 @@ function App() {
       }
 
       // Fetch transactions
-      const { data: txData } = await supabase.from('transactions').select('*').order('date', { ascending: false });
+      const { data: txData } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
       if (txData) {
         setTransactions(txData.map(t => ({
           id: t.id,
