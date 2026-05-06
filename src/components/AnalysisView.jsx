@@ -12,6 +12,7 @@ const AnalysisView = ({ transactions, settings }) => {
   const person2 = settings?.person2Name || 'Sanari';
 
   const [filterType, setFilterType] = useState('month'); // 'month' or 'year'
+  const [personFilter, setPersonFilter] = useState('all'); // 'all', 'both', 'person1', 'person2'
   const [currentDate, setCurrentDate] = useState(new Date());
 
   // Filter transactions by selected period
@@ -25,8 +26,21 @@ const AnalysisView = ({ transactions, settings }) => {
     }
   });
 
-  const incomes = filteredTransactions.filter(t => t.type === 'income');
-  const expenses = filteredTransactions.filter(t => t.type === 'expense');
+  const allIncomes = filteredTransactions.filter(t => t.type === 'income');
+  const allExpenses = filteredTransactions.filter(t => t.type === 'expense');
+
+  let incomes = allIncomes;
+  let expenses = allExpenses;
+
+  if (personFilter !== 'all') {
+    if (personFilter === 'both') {
+      incomes = [];
+      expenses = allExpenses.filter(t => t.forWhom === 'both');
+    } else {
+      incomes = allIncomes.filter(t => t.payer === personFilter);
+      expenses = allExpenses.filter(t => t.forWhom === personFilter);
+    }
+  }
 
   const totalIncome = incomes.reduce((sum, inc) => sum + Number(inc.amount), 0);
   const totalExpense = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
@@ -57,7 +71,12 @@ const AnalysisView = ({ transactions, settings }) => {
     }
     categoryData[major].subs[minor] += amount;
 
-    // Settlement calculation (Who is this for?)
+    // Settlement calculation happens over ALL expenses
+  });
+
+  let balance = 0; 
+  allExpenses.forEach(exp => {
+    const amount = Number(exp.amount);
     const whom = exp.forWhom || 'both';
     
     let person1ShareAmount = 0;
@@ -148,6 +167,13 @@ const AnalysisView = ({ transactions, settings }) => {
     setSelectedMajor(null);
   };
 
+  const getTargetName = () => {
+    if (personFilter === 'all') return '世帯の';
+    if (personFilter === 'both') return 'ふたり用の';
+    if (personFilter === 'person1') return `${person1}の`;
+    return `${person2}の`;
+  };
+
   const displayPeriod = filterType === 'month' 
     ? `${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月`
     : `${currentDate.getFullYear()}年`;
@@ -173,6 +199,13 @@ const AnalysisView = ({ transactions, settings }) => {
             年単位
           </div>
         </div>
+
+        <div className="tab-container" style={{ width: '100%', maxWidth: '300px', margin: '0 auto' }}>
+          <div className={`tab-button ${personFilter === 'all' ? 'active' : 'inactive'}`} onClick={() => { setPersonFilter('all'); setSelectedMajor(null); }} style={{ padding: '4px', fontSize: '0.85rem' }}>全員</div>
+          <div className={`tab-button ${personFilter === 'both' ? 'active' : 'inactive'}`} onClick={() => { setPersonFilter('both'); setSelectedMajor(null); }} style={{ padding: '4px', fontSize: '0.85rem' }}>ふたり</div>
+          <div className={`tab-button ${personFilter === 'person1' ? 'active' : 'inactive'}`} onClick={() => { setPersonFilter('person1'); setSelectedMajor(null); }} style={{ padding: '4px', fontSize: '0.85rem' }}>{person1}</div>
+          <div className={`tab-button ${personFilter === 'person2' ? 'active' : 'inactive'}`} onClick={() => { setPersonFilter('person2'); setSelectedMajor(null); }} style={{ padding: '4px', fontSize: '0.85rem' }}>{person2}</div>
+        </div>
         
         <div className="flex justify-between items-center w-full" style={{ maxWidth: '300px' }}>
           <button className="btn btn-secondary" style={{ width: '40px', padding: '8px' }} onClick={() => changePeriod(-1)}>
@@ -188,11 +221,11 @@ const AnalysisView = ({ transactions, settings }) => {
       {/* 収入・支出 サマリー */}
       <div className="flex gap-4 mb-4">
         <div className="glass-card" style={{ flex: 1 }}>
-          <span className="form-label">世帯の総収入</span>
+          <span className="form-label">{getTargetName()}総収入</span>
           <h3 style={{ fontSize: '1.2rem', color: 'var(--income)' }}>{formatter.format(totalIncome)}</h3>
         </div>
         <div className="glass-card" style={{ flex: 1 }}>
-          <span className="form-label">世帯の総支出</span>
+          <span className="form-label">{getTargetName()}総支出</span>
           <h3 style={{ fontSize: '1.2rem', color: 'var(--expense)' }}>{formatter.format(totalExpense)}</h3>
         </div>
       </div>
