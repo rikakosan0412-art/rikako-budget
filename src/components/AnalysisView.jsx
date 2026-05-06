@@ -29,17 +29,25 @@ const AnalysisView = ({ transactions, settings }) => {
   const allIncomes = filteredTransactions.filter(t => t.type === 'income');
   const allExpenses = filteredTransactions.filter(t => t.type === 'expense');
 
-  let incomes = allIncomes;
-  let expenses = allExpenses;
+  let incomes = [];
+  let expenses = [];
 
-  if (personFilter !== 'all') {
-    if (personFilter === 'both') {
-      incomes = [];
-      expenses = allExpenses.filter(t => t.forWhom === 'both');
-    } else {
-      incomes = allIncomes.filter(t => t.payer === personFilter);
-      expenses = allExpenses.filter(t => t.forWhom === personFilter);
-    }
+  if (personFilter === 'all') {
+    incomes = allIncomes;
+    expenses = allExpenses;
+  } else if (personFilter === 'both') {
+    incomes = [];
+    expenses = allExpenses.filter(t => t.forWhom === 'both');
+  } else {
+    incomes = allIncomes.filter(t => t.payer === personFilter);
+    allExpenses.forEach(t => {
+      if (t.forWhom === personFilter) {
+        expenses.push(t);
+      } else if (t.forWhom === 'both') {
+        // ふたりの支出は半分を個人の負担として計算する
+        expenses.push({ ...t, amount: Number(t.amount) / 2 });
+      }
+    });
   }
 
   const totalIncome = incomes.reduce((sum, inc) => sum + Number(inc.amount), 0);
