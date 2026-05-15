@@ -3,8 +3,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis
 import TransactionList from './TransactionList';
 
 const COLORS = [
-  '#4f46e5', '#10b981', '#f59e0b', '#ef4444', 
-  '#8b5cf6', '#06b6d4', '#f43f5e', '#64748b', 
+  '#4f46e5', '#10b981', '#f59e0b', '#ef4444',
+  '#8b5cf6', '#06b6d4', '#f43f5e', '#64748b',
   '#84cc16', '#14b8a6'
 ];
 
@@ -20,8 +20,8 @@ const AnalysisView = ({ transactions, onEditTransaction, settings }) => {
   const filteredTransactions = transactions.filter(t => {
     const txDate = new Date(t.date);
     if (filterType === 'month') {
-      return txDate.getFullYear() === currentDate.getFullYear() && 
-             txDate.getMonth() === currentDate.getMonth();
+      return txDate.getFullYear() === currentDate.getFullYear() &&
+        txDate.getMonth() === currentDate.getMonth();
     } else {
       return txDate.getFullYear() === currentDate.getFullYear();
     }
@@ -67,7 +67,7 @@ const AnalysisView = ({ transactions, onEditTransaction, settings }) => {
     const amount = Number(exp.amount);
     const major = exp.majorCategory || exp.category || 'その他';
     const minor = exp.subCategory || 'その他';
-    
+
     if (!categoryData[major]) {
       categoryData[major] = { total: 0, subs: {} };
     }
@@ -81,11 +81,11 @@ const AnalysisView = ({ transactions, onEditTransaction, settings }) => {
     // Settlement calculation happens over ALL expenses
   });
 
-  let balance = 0; 
+  let balance = 0;
   allExpenses.forEach(exp => {
     const amount = Number(exp.amount);
     const whom = exp.forWhom || 'both';
-    
+
     let person1ShareAmount = 0;
     let person2ShareAmount = 0;
 
@@ -135,7 +135,7 @@ const AnalysisView = ({ transactions, onEditTransaction, settings }) => {
       const monthKey = `${d.getMonth() + 1}月`;
       const major = exp.majorCategory || exp.category || 'その他';
       majorCategoriesSet.add(major);
-      
+
       if (!monthlyMap[monthKey]) {
         monthlyMap[monthKey] = { name: monthKey };
       }
@@ -179,7 +179,7 @@ const AnalysisView = ({ transactions, onEditTransaction, settings }) => {
   };
 
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }) => {
-    if (percent < 0.05) return null; 
+    if (percent < 0.05) return null;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
     const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
@@ -209,12 +209,12 @@ const AnalysisView = ({ transactions, onEditTransaction, settings }) => {
     return `${person2}の`;
   };
 
-  const displayPeriod = filterType === 'month' 
+  const displayPeriod = filterType === 'month'
     ? `${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月`
     : `${currentDate.getFullYear()}年`;
 
   let displayTransactions = filteredTransactions;
-  
+
   if (personFilter !== 'all') {
     if (personFilter === 'both') {
       displayTransactions = displayTransactions.filter(t => t.type === 'expense' && t.forWhom === 'both');
@@ -233,18 +233,18 @@ const AnalysisView = ({ transactions, onEditTransaction, settings }) => {
 
   return (
     <div style={{ animation: 'fadeIn 0.3s ease' }}>
-      
+
       {/* 期間フィルター UI */}
       <div className="glass-panel mb-6 flex flex-col items-center gap-4" style={{ padding: '16px' }}>
         <div className="tab-container" style={{ width: '100%', maxWidth: '300px', margin: '0 auto' }}>
-          <div 
+          <div
             className={`tab-button ${filterType === 'month' ? 'active' : 'inactive'}`}
             onClick={() => { setFilterType('month'); setSelectedMajor(null); }}
             style={{ padding: '6px' }}
           >
             月単位
           </div>
-          <div 
+          <div
             className={`tab-button ${filterType === 'year' ? 'active' : 'inactive'}`}
             onClick={() => { setFilterType('year'); setSelectedMajor(null); }}
             style={{ padding: '6px' }}
@@ -258,7 +258,7 @@ const AnalysisView = ({ transactions, onEditTransaction, settings }) => {
           <div className={`tab-button ${personFilter === 'person1' ? 'active' : 'inactive'}`} onClick={() => { setPersonFilter('person1'); setSelectedMajor(null); }} style={{ padding: '4px', fontSize: '0.85rem' }}>{person1}</div>
           <div className={`tab-button ${personFilter === 'person2' ? 'active' : 'inactive'}`} onClick={() => { setPersonFilter('person2'); setSelectedMajor(null); }} style={{ padding: '4px', fontSize: '0.85rem' }}>{person2}</div>
         </div>
-        
+
         <div className="flex justify-between items-center w-full" style={{ maxWidth: '300px' }}>
           <button className="btn btn-secondary" style={{ width: '40px', padding: '8px' }} onClick={() => changePeriod(-1)}>
             ◀
@@ -295,13 +295,13 @@ const AnalysisView = ({ transactions, onEditTransaction, settings }) => {
           </div>
         </div>
         <div style={{ width: '100%', height: '8px', background: 'rgba(0,0,0,0.05)', borderRadius: '4px', overflow: 'hidden', marginTop: '12px' }}>
-          <div 
-            style={{ 
-              width: `${Math.min((totalExpense / targetBudget) * 100, 100)}%`, 
-              height: '100%', 
+          <div
+            style={{
+              width: `${Math.min((totalExpense / targetBudget) * 100, 100)}%`,
+              height: '100%',
               background: budgetRemaining >= 0 ? 'var(--primary-gradient)' : 'var(--danger)',
               borderRadius: '4px'
-            }} 
+            }}
           />
         </div>
       </div>
@@ -313,8 +313,8 @@ const AnalysisView = ({ transactions, onEditTransaction, settings }) => {
             支出の詳細分析 {selectedMajor && filterType === 'month' ? `(${selectedMajor}の内訳)` : ''}
           </h3>
           {selectedMajor && filterType === 'month' && (
-            <button 
-              className="btn btn-secondary" 
+            <button
+              className="btn btn-secondary"
               style={{ padding: '6px 12px', fontSize: '0.8rem', width: 'auto' }}
               onClick={() => setSelectedMajor(null)}
             >
@@ -368,8 +368,8 @@ const AnalysisView = ({ transactions, onEditTransaction, settings }) => {
                 <BarChart data={monthlyChartData} margin={{ top: 20, right: 0, left: -20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
-                  <YAxis axisLine={false} tickLine={false} tickFormatter={(value) => `¥${(value/10000).toFixed(0)}万`} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
-                  <Tooltip 
+                  <YAxis axisLine={false} tickLine={false} tickFormatter={(value) => `¥${(value / 10000).toFixed(0)}万`} tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
+                  <Tooltip
                     formatter={(value) => formatter.format(value)}
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                   />
@@ -410,12 +410,13 @@ const AnalysisView = ({ transactions, onEditTransaction, settings }) => {
 
       {/* 取引一覧 (絞り込み連動) */}
       <div style={{ marginTop: '24px' }}>
-        <TransactionList 
+        <TransactionList
           title={selectedMajor ? `「${selectedMajor}」の取引` : 'この期間の取引一覧'}
-          transactions={displayTransactions} 
-          settings={settings} 
+          transactions={displayTransactions}
+          settings={settings}
           onEditTransaction={onEditTransaction}
-          // onDeleteTransaction は渡さないことで削除ボタンを非表示にする
+          groupByDate={true}
+        // onDeleteTransaction は渡さないことで削除ボタンを非表示にする
         />
       </div>
     </div>
