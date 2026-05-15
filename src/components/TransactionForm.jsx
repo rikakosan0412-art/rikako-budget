@@ -3,6 +3,29 @@ import React, { useState, useEffect, useRef } from 'react';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../constants/categories';
 import { parseReceipt, parseText } from '../lib/geminiClient';
 
+const IconCamera = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="8" width="18" height="12" rx="2" ry="2"></rect>
+    <path d="M16 8v-2a2 2 0 0 0-2-2H10a2 2 0 0 0-2 2v2"></path>
+    <circle cx="12" cy="14" r="3"></circle>
+  </svg>
+);
+
+const IconMic = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+    <line x1="12" y1="19" x2="12" y2="22"></line>
+  </svg>
+);
+
+const IconSend = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="22" y1="2" x2="11" y2="13"></line>
+    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+  </svg>
+);
+
 const TransactionForm = ({ onAddTransaction, settings }) => {
   const person1 = settings?.person1Name || 'Rikako';
   const person2 = settings?.person2Name || 'Sanari';
@@ -206,40 +229,31 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
         
         {/* AI Input Section */}
         {type === 'expense' && (
-          <div className="form-group" style={{ marginBottom: '0.5rem', background: 'rgba(255,255,255,0.4)', padding: '12px', borderRadius: '8px' }}>
-            <div className="flex gap-2">
-              {/* Receipt Button */}
-              <input 
-                type="file" 
-                accept="image/*" 
-                capture="environment" 
-                ref={fileInputRef}
-                style={{ display: 'none' }} 
-                onChange={handleReceiptUpload}
-              />
-              <button 
-                type="button" 
-                className="btn btn-secondary"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isOcrLoading || isTextLoading}
-                style={{ flex: 1, padding: '10px', fontSize: '0.9rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', background: 'white', color: 'var(--text-main)', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
-              >
-                {isOcrLoading ? '⏳ 解析中...' : '📸 レシート'}
-              </button>
-
-              {/* Voice Button */}
-              <button 
-                type="button" 
-                className="btn btn-secondary"
-                onClick={startListening}
-                disabled={isListening || isOcrLoading || isTextLoading}
-                style={{ width: 'auto', padding: '0 16px', fontSize: '0.9rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', background: isListening ? '#fee2e2' : 'white', color: isListening ? '#ef4444' : 'var(--text-main)', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
-              >
-                {isListening ? '🎙️ 録音中...' : '🎤 音声'}
-              </button>
-            </div>
+          <div className="form-group" style={{ marginBottom: '0.5rem', background: 'rgba(255,255,255,0.4)', padding: '16px', borderRadius: '12px' }}>
             
-            <div className="flex gap-2" style={{ marginTop: '12px' }}>
+            {/* Receipt Button */}
+            <input 
+              type="file" 
+              accept="image/*" 
+              ref={fileInputRef}
+              style={{ display: 'none' }} 
+              onChange={handleReceiptUpload}
+            />
+            <button 
+              type="button" 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isOcrLoading || isTextLoading}
+              style={{ 
+                width: '100%', padding: '12px', fontSize: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', 
+                background: 'var(--glass-bg)', color: 'var(--text-main)', border: '1px solid var(--glass-border)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s ease', fontWeight: 600
+              }}
+            >
+              {isOcrLoading ? <span style={{ opacity: 0.7 }}>⏳ 解析中...</span> : <><IconCamera /> レシート</>}
+            </button>
+
+            <div style={{ margin: '16px 0', borderBottom: '1px solid rgba(0,0,0,0.05)' }}></div>
+            
+            <div className="flex gap-2">
               <input 
                 type="text" 
                 placeholder="例: 昨日スタバで600円" 
@@ -247,20 +261,35 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
                 onChange={(e) => setTextInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleTextSubmit(); } }}
                 disabled={isTextLoading || isOcrLoading}
-                style={{ flex: 1, minWidth: 0, padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.9rem' }}
+                style={{ flex: 1, minWidth: 0, padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--glass-border)', fontSize: '0.9rem', background: 'var(--glass-bg)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}
               />
+              
               <button 
                 type="button" 
-                className={`btn ${isTextLoading ? 'btn-secondary' : 'btn-primary'}`}
                 onClick={handleTextSubmit}
                 disabled={isTextLoading || isOcrLoading || !textInput.trim()}
-                style={{ width: 'auto', flexShrink: 0, padding: '0 16px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+                style={{ 
+                  width: '44px', height: '44px', flexShrink: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 0,
+                  background: 'var(--glass-bg)', color: 'var(--text-main)', border: '1px solid var(--glass-border)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s ease', opacity: (!textInput.trim() || isTextLoading || isOcrLoading) ? 0.4 : 1
+                }}
               >
-                {isTextLoading ? '解析中' : '💬 解析'}
+                {isTextLoading ? <span style={{ fontSize: '0.7rem' }}>⏳</span> : <IconSend />}
+              </button>
+
+              <button 
+                type="button" 
+                onClick={startListening}
+                disabled={isListening || isOcrLoading || isTextLoading}
+                style={{ 
+                  width: '44px', height: '44px', flexShrink: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 0,
+                  background: isListening ? '#fee2e2' : 'var(--glass-bg)', color: isListening ? '#ef4444' : 'var(--text-main)', border: '1px solid var(--glass-border)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s ease', opacity: (isListening || isOcrLoading || isTextLoading) ? 0.4 : 1
+                }}
+              >
+                <IconMic />
               </button>
             </div>
 
-            {ocrError && <p style={{ color: 'red', fontSize: '0.85rem', marginTop: '0.5rem', textAlign: 'center' }}>{ocrError}</p>}
+            {ocrError && <p style={{ color: 'red', fontSize: '0.85rem', marginTop: '12px', textAlign: 'center' }}>{ocrError}</p>}
           </div>
         )}
 
@@ -320,8 +349,8 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
           </div>
         )}
 
-        <div className="flex gap-4">
-          <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+        <div className="flex gap-4" style={{ flexWrap: 'wrap' }}>
+          <div className="form-group" style={{ flex: '1 1 120px', marginBottom: 0 }}>
             <label className="form-label">金額 (円)</label>
             <input 
               type="number" 
@@ -332,7 +361,7 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
               min="1"
             />
           </div>
-          <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+          <div className="form-group" style={{ flex: '1 1 140px', marginBottom: 0 }}>
             <label className="form-label">日付</label>
             <input 
               type="date" 
@@ -343,15 +372,15 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
           </div>
         </div>
 
-        <div className="flex gap-4">
-          <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+        <div className="flex gap-4" style={{ flexWrap: 'wrap' }}>
+          <div className="form-group" style={{ flex: '1 1 120px', marginBottom: 0 }}>
             <label className="form-label">カテゴリ</label>
             <select value={majorCategory} onChange={handleMajorCategoryChange}>
               {majorKeys.map(key => <option key={key} value={key}>{key}</option>)}
             </select>
           </div>
           {currentSubCategories.length > 0 && (
-            <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+            <div className="form-group" style={{ flex: '1 1 120px', marginBottom: 0 }}>
               <label className="form-label">詳細</label>
               <select value={subCategory} onChange={(e) => setSubCategory(e.target.value)}>
                 {currentSubCategories.map(c => <option key={c} value={c}>{c}</option>)}
