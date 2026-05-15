@@ -255,7 +255,6 @@ const AnalysisView = ({ transactions, settings }) => {
 
         <div className="tab-container" style={{ width: '100%', maxWidth: '300px', margin: '0 auto' }}>
           <div className={`tab-button ${personFilter === 'all' ? 'active' : 'inactive'}`} onClick={() => { setPersonFilter('all'); setSelectedMajor(null); }} style={{ padding: '4px', fontSize: '0.85rem' }}>全員</div>
-          <div className={`tab-button ${personFilter === 'both' ? 'active' : 'inactive'}`} onClick={() => { setPersonFilter('both'); setSelectedMajor(null); }} style={{ padding: '4px', fontSize: '0.85rem' }}>ふたり</div>
           <div className={`tab-button ${personFilter === 'person1' ? 'active' : 'inactive'}`} onClick={() => { setPersonFilter('person1'); setSelectedMajor(null); }} style={{ padding: '4px', fontSize: '0.85rem' }}>{person1}</div>
           <div className={`tab-button ${personFilter === 'person2' ? 'active' : 'inactive'}`} onClick={() => { setPersonFilter('person2'); setSelectedMajor(null); }} style={{ padding: '4px', fontSize: '0.85rem' }}>{person2}</div>
         </div>

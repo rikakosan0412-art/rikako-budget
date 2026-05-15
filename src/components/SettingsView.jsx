@@ -148,13 +148,6 @@ const SettingsView = ({ settings, onUpdateSettings, transactions, onClearData })
           📥 データをCSVで書き出す
         </button>
         
-        <button 
-          className="btn mb-2" 
-          style={{ background: 'transparent', border: '1px solid var(--danger)', color: 'var(--danger)' }}
-          onClick={handleClear}
-        >
-          🗑️ すべてのデータを削除する (リセット)
-        </button>
       </div>
     </div>
   );
