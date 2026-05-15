@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import RecordView from './components/RecordView';
 import AnalysisView from './components/AnalysisView';
 import SettingsView from './components/SettingsView';
+import TransactionForm from './components/TransactionForm';
 import { supabase } from './lib/supabaseClient';
 
 const IconRecord = () => (
@@ -35,6 +36,7 @@ const IconMenu = () => (
 function App() {
   const [activeTab, setActiveTab] = useState('record'); // 'record' | 'analysis' | 'settings'
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
   
   const [settings, setSettings] = useState({
     monthlyBudget: 150000,
@@ -109,6 +111,27 @@ function App() {
     await supabase.from('transactions').delete().eq('id', id);
   };
 
+  const handleUpdateTransaction = async (updatedTx) => {
+    setTransactions(prev => prev.map(t => t.id === updatedTx.id ? updatedTx : t));
+    setEditingTransaction(null);
+    
+    const { error } = await supabase.from('transactions').update({
+      type: updatedTx.type,
+      date: updatedTx.date,
+      amount: updatedTx.amount,
+      major_category: updatedTx.majorCategory,
+      minor_category: updatedTx.subCategory || '',
+      memo: updatedTx.memo || '',
+      payer: updatedTx.payer,
+      for_whom: updatedTx.forWhom
+    }).eq('id', updatedTx.id);
+
+    if (error) {
+      console.error("Error updating transaction", error);
+      alert("更新エラー");
+    }
+  };
+
   const handleClearData = async () => {
     setTransactions([]);
     // UUIDはハイフン付きの36文字でなければならないため、0のUUIDを指定してそれ以外を削除
@@ -142,6 +165,54 @@ function App() {
 
   return (
     <>
+      {/* Edit Modal Overlay */}
+      {editingTransaction && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 10000,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '20px',
+            animation: 'fadeIn 0.2s ease'
+          }}
+          onClick={() => setEditingTransaction(null)}
+        >
+          <div 
+            style={{
+              background: 'var(--bg-color)', 
+              width: '100%', 
+              maxWidth: '500px', 
+              borderRadius: '16px', 
+              padding: '24px', 
+              maxHeight: '90vh', 
+              overflowY: 'auto',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-gradient" style={{ margin: 0 }}>記録の編集</h2>
+              <button 
+                onClick={() => setEditingTransaction(null)} 
+                style={{ background: 'transparent', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-muted)' }}
+              >
+                ✕
+              </button>
+            </div>
+            <TransactionForm 
+              settings={settings}
+              initialData={editingTransaction}
+              onUpdateTransaction={handleUpdateTransaction}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Menu Overlay */}
       {isMenuOpen && (
         <div 
@@ -240,12 +311,14 @@ function App() {
             transactions={transactions} 
             onAddTransaction={handleAddTransaction} 
             onDeleteTransaction={handleDeleteTransaction} 
+            onEditTransaction={setEditingTransaction}
             settings={settings}
           />
         )}
         {activeTab === 'analysis' && (
           <AnalysisView 
             transactions={transactions} 
+            onEditTransaction={setEditingTransaction}
             settings={settings}
           />
         )}
