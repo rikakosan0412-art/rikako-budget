@@ -85,7 +85,7 @@ function App() {
   }, []);
 
   const handleAddTransaction = async (transaction) => {
-    setTransactions(prev => [transaction, ...prev].sort((a,b) => new Date(b.date) - new Date(a.date)));
+    setTransactions(prev => [transaction, ...prev]);
     
     const { error } = await supabase.from('transactions').insert({
       id: transaction.id,
