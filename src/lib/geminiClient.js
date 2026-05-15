@@ -28,9 +28,10 @@ export async function fileToGenerativePart(file) {
 /**
  * Parses a receipt image and extracts date, amount, and memo.
  * @param {File} imageFile - The receipt image file
+ * @param {Object} categoriesMap - Dynamic categories to parse into
  * @returns {Promise<{date: string, amount: number, memo: string}>}
  */
-export async function parseReceipt(imageFile) {
+export async function parseReceipt(imageFile, categoriesMap) {
   if (!genAI) {
     throw new Error("Gemini API key is not configured.");
   }
@@ -50,14 +51,7 @@ export async function parseReceipt(imageFile) {
 5. subCategory: レシートの内容から推測される小カテゴリ（複数の商品がある場合は、一番金額の大きいものや全体を代表するものを基準に大まかに推測してください）。
 
 【選択可能なカテゴリリスト（大カテゴリ: 小カテゴリの候補）】
-- 食費: 食料品, 外食, 間食, その他
-- 日用品: 美容, その他
-- 交通費: 航空券, 在来線, 新幹線, 車, ガソリン, 高速, 駐車場, その他
-- 趣味: 衣服, 嗜好品, スキー, 映画, 登山, 家具, 乗馬, 旅行, 飲み会, 本, その他
-- 家賃: その他
-- 光熱費: 水道, ガス, 電気, 通信, その他
-- 医療: その他
-- その他: その他
+${categoriesMap ? Object.entries(categoriesMap).map(([major, minors]) => `- ${major}: ${minors.join(', ')}`).join('\n') : '- カテゴリ情報なし'}
 
 レスポンスは以下のフォーマットのJSONのみを出力してください（マークダウンのバッククオートなどは含めないでください）。
 {
@@ -98,9 +92,10 @@ export async function parseReceipt(imageFile) {
 /**
  * Parses free text to extract expense information.
  * @param {string} textInput - The user's input text
+ * @param {Object} categoriesMap - Dynamic categories to parse into
  * @returns {Promise<{date: string, amount: number, memo: string, majorCategory: string, subCategory: string, payer: string}>}
  */
-export async function parseText(textInput) {
+export async function parseText(textInput, categoriesMap) {
   if (!genAI) {
     throw new Error("Gemini API key is not configured.");
   }
@@ -123,14 +118,7 @@ export async function parseText(textInput) {
 6. payer: 誰が支払ったか。Rikakoなど女性名なら"person1"、Sanariなど男性名なら"person2"。不明ならnull。
 
 【選択可能なカテゴリリスト（大カテゴリ: 小カテゴリの候補）】
-- 食費: 食料品, 外食, 間食, その他
-- 日用品: 美容, その他
-- 交通費: 航空券, 在来線, 新幹線, 車, ガソリン, 高速, 駐車場, その他
-- 趣味: 衣服, 嗜好品, スキー, 映画, 登山, 家具, 乗馬, 旅行, 飲み会, 本, その他
-- 家賃: その他
-- 光熱費: 水道, ガス, 電気, 通信, その他
-- 医療: その他
-- その他: その他
+${categoriesMap ? Object.entries(categoriesMap).map(([major, minors]) => `- ${major}: ${minors.join(', ')}`).join('\n') : '- カテゴリ情報なし'}
 
 レスポンスは以下のフォーマットのJSONのみを出力してください（マークダウンのバッククオートなどは含めないでください）。
 {
