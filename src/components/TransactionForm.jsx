@@ -26,19 +26,19 @@ const IconSend = () => (
   </svg>
 );
 
-const TransactionForm = ({ onAddTransaction, settings }) => {
+const TransactionForm = ({ onAddTransaction, onUpdateTransaction, initialData, settings }) => {
   const person1 = settings?.person1Name || 'Rikako';
   const person2 = settings?.person2Name || 'Sanari';
 
-  const [type, setType] = useState('expense'); // 'expense' or 'income'
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [payer, setPayer] = useState(settings?.defaultPayer || 'person1'); 
-  const [forWhom, setForWhom] = useState(settings?.defaultForWhom || 'both'); 
-  const [amount, setAmount] = useState('');
+  const [type, setType] = useState(initialData?.type || 'expense'); // 'expense' or 'income'
+  const [date, setDate] = useState(initialData?.date || new Date().toISOString().split('T')[0]);
+  const [payer, setPayer] = useState(initialData?.payer || settings?.defaultPayer || 'person1'); 
+  const [forWhom, setForWhom] = useState(initialData?.forWhom || settings?.defaultForWhom || 'both'); 
+  const [amount, setAmount] = useState(initialData?.amount?.toString() || '');
   
-  const [majorCategory, setMajorCategory] = useState(settings?.defaultExpenseMajor || '食費');
-  const [subCategory, setSubCategory] = useState(settings?.defaultExpenseMinor || '食料品');
-  const [memo, setMemo] = useState('');
+  const [majorCategory, setMajorCategory] = useState(initialData?.majorCategory || settings?.defaultExpenseMajor || '食費');
+  const [subCategory, setSubCategory] = useState(initialData?.subCategory || settings?.defaultExpenseMinor || '食料品');
+  const [memo, setMemo] = useState(initialData?.memo || '');
 
   const [isOcrLoading, setIsOcrLoading] = useState(false);
   const [ocrError, setOcrError] = useState('');
@@ -49,7 +49,7 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
 
   // Update defaults when settings change
   useEffect(() => {
-    if (settings) {
+    if (settings && !initialData) {
       if (type === 'expense') {
         setMajorCategory(settings.defaultExpenseMajor || '食費');
         setSubCategory(settings.defaultExpenseMinor || '食料品');
@@ -184,8 +184,8 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
     e.preventDefault();
     if (!amount || Number(amount) <= 0) return;
 
-    const newTransaction = {
-      id: crypto.randomUUID(),
+    const transaction = {
+      id: initialData ? initialData.id : crypto.randomUUID(),
       type,
       date,
       payer,
@@ -197,11 +197,14 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
       memo
     };
 
-    onAddTransaction(newTransaction);
-    
-    // Reset form partially
-    setAmount('');
-    setMemo('');
+    if (initialData) {
+      onUpdateTransaction(transaction);
+    } else {
+      onAddTransaction(transaction);
+      // Reset form partially
+      setAmount('');
+      setMemo('');
+    }
   };
 
   const currentCategoryMap = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
@@ -228,7 +231,7 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         
         {/* AI Input Section */}
-        {type === 'expense' && (
+        {type === 'expense' && !initialData && (
           <div className="form-group" style={{ marginBottom: '0.5rem', background: 'rgba(255,255,255,0.4)', padding: '16px', borderRadius: '12px' }}>
             
             {/* Receipt Button */}
@@ -400,7 +403,7 @@ const TransactionForm = ({ onAddTransaction, settings }) => {
         </div>
 
         <button type="submit" className="btn btn-primary mt-2">
-          {type === 'expense' ? '支出を記録' : '収入を記録'}
+          {initialData ? '更新を保存' : (type === 'expense' ? '支出を記録' : '収入を記録')}
         </button>
       </form>
     </div>
