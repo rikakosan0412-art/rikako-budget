@@ -76,7 +76,7 @@ const TransactionForm = ({ onAddTransaction, onUpdateTransaction, initialData, s
     const newMajor = e.target.value;
     setMajorCategory(newMajor);
     
-    const categoryMap = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+    const categoryMap = type === 'expense' ? (settings?.expenseCategories || EXPENSE_CATEGORIES) : (settings?.incomeCategories || INCOME_CATEGORIES);
     const subCats = categoryMap[newMajor] || [];
     
     if (subCats.length > 0) {
@@ -94,7 +94,7 @@ const TransactionForm = ({ onAddTransaction, onUpdateTransaction, initialData, s
     setOcrError('');
     
     try {
-      const result = await parseReceipt(file);
+      const result = await parseReceipt(file, settings?.expenseCategories || EXPENSE_CATEGORIES);
       
       if (result.date) setDate(result.date);
       if (result.amount) setAmount(result.amount.toString());
@@ -125,7 +125,7 @@ const TransactionForm = ({ onAddTransaction, onUpdateTransaction, initialData, s
     setOcrError('');
     
     try {
-      const result = await parseText(textInput);
+      const result = await parseText(textInput, settings?.expenseCategories || EXPENSE_CATEGORIES);
       
       if (result.date) setDate(result.date);
       if (result.amount) setAmount(result.amount.toString());
@@ -207,7 +207,7 @@ const TransactionForm = ({ onAddTransaction, onUpdateTransaction, initialData, s
     }
   };
 
-  const currentCategoryMap = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+  const currentCategoryMap = type === 'expense' ? (settings?.expenseCategories || EXPENSE_CATEGORIES) : (settings?.incomeCategories || INCOME_CATEGORIES);
   const majorKeys = Object.keys(currentCategoryMap);
   const currentSubCategories = currentCategoryMap[majorCategory] || [];
 

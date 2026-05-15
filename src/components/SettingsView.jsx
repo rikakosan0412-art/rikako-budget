@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { EXPENSE_CATEGORIES } from '../constants/categories';
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../constants/categories';
 
 const SettingsView = ({ settings, onUpdateSettings, transactions, onClearData }) => {
   const [budget, setBudget] = useState(settings.monthlyBudget || 150000);
@@ -11,6 +11,29 @@ const SettingsView = ({ settings, onUpdateSettings, transactions, onClearData })
   const [expenseMajor, setExpenseMajor] = useState(settings.defaultExpenseMajor || '食費');
   const [expenseMinor, setExpenseMinor] = useState(settings.defaultExpenseMinor || '食料品');
 
+  // Categories state
+  const [expenseCategories, setExpenseCategories] = useState(settings.expenseCategories || EXPENSE_CATEGORIES);
+  const [incomeCategories, setIncomeCategories] = useState(settings.incomeCategories || INCOME_CATEGORIES);
+  
+  // Category Editor state
+  const [catTab, setCatTab] = useState('expense'); // 'expense' or 'income'
+  const [selectedMajorCat, setSelectedMajorCat] = useState('食費');
+  const [newMajor, setNewMajor] = useState('');
+  const [newMinor, setNewMinor] = useState('');
+
+  const currentCategories = catTab === 'expense' ? expenseCategories : incomeCategories;
+  const setCurrentCategories = catTab === 'expense' ? setExpenseCategories : setIncomeCategories;
+
+  // Sync selectedMajorCat when tab changes
+  React.useEffect(() => {
+    const keys = Object.keys(currentCategories);
+    if (keys.length > 0 && !keys.includes(selectedMajorCat)) {
+      setSelectedMajorCat(keys[0]);
+    } else if (keys.length === 0) {
+      setSelectedMajorCat('');
+    }
+  }, [catTab, currentCategories]);
+
   const handleSave = () => {
     onUpdateSettings({
       ...settings,
@@ -20,7 +43,9 @@ const SettingsView = ({ settings, onUpdateSettings, transactions, onClearData })
       defaultPayer: payer,
       defaultForWhom: forWhom,
       defaultExpenseMajor: expenseMajor,
-      defaultExpenseMinor: expenseMinor
+      defaultExpenseMinor: expenseMinor,
+      expenseCategories,
+      incomeCategories
     });
     alert('設定を保存しました');
   };
@@ -28,7 +53,7 @@ const SettingsView = ({ settings, onUpdateSettings, transactions, onClearData })
   const handleMajorChange = (e) => {
     const val = e.target.value;
     setExpenseMajor(val);
-    const minors = EXPENSE_CATEGORIES[val] || [];
+    const minors = expenseCategories[val] || [];
     setExpenseMinor(minors.length > 0 ? minors[0] : '');
   };
 
@@ -59,11 +84,45 @@ const SettingsView = ({ settings, onUpdateSettings, transactions, onClearData })
     document.body.removeChild(link);
   };
 
-  const handleClear = () => {
-    if (window.confirm('本当にすべてのデータを削除しますか？この操作は取り消せません。')) {
-      onClearData();
-      alert('データをすべて削除しました。');
+  // Category Editor Handlers
+  const handleAddMajor = () => {
+    if (!newMajor.trim()) return;
+    if (currentCategories[newMajor]) {
+      alert('そのカテゴリは既に存在します。');
+      return;
     }
+    setCurrentCategories(prev => ({ ...prev, [newMajor.trim()]: [] }));
+    setSelectedMajorCat(newMajor.trim());
+    setNewMajor('');
+  };
+
+  const handleDeleteMajor = () => {
+    if (!window.confirm(`大カテゴリ「${selectedMajorCat}」を削除してもよろしいですか？`)) return;
+    setCurrentCategories(prev => {
+      const next = { ...prev };
+      delete next[selectedMajorCat];
+      return next;
+    });
+  };
+
+  const handleAddMinor = () => {
+    if (!newMinor.trim() || !selectedMajorCat) return;
+    if (currentCategories[selectedMajorCat].includes(newMinor.trim())) {
+      alert('その小カテゴリは既に存在します。');
+      return;
+    }
+    setCurrentCategories(prev => ({
+      ...prev,
+      [selectedMajorCat]: [...prev[selectedMajorCat], newMinor.trim()]
+    }));
+    setNewMinor('');
+  };
+
+  const handleDeleteMinor = (minorName) => {
+    setCurrentCategories(prev => ({
+      ...prev,
+      [selectedMajorCat]: prev[selectedMajorCat].filter(m => m !== minorName)
+    }));
   };
 
   return (
@@ -125,18 +184,64 @@ const SettingsView = ({ settings, onUpdateSettings, transactions, onClearData })
           <div className="form-group" style={{ flex: 1 }}>
             <label className="form-label">カテゴリ</label>
             <select value={expenseMajor} onChange={handleMajorChange}>
-              {Object.keys(EXPENSE_CATEGORIES).map(k => <option key={k} value={k}>{k}</option>)}
+              {Object.keys(expenseCategories).map(k => <option key={k} value={k}>{k}</option>)}
             </select>
           </div>
           <div className="form-group" style={{ flex: 1 }}>
             <label className="form-label">詳細</label>
             <select value={expenseMinor} onChange={e => setExpenseMinor(e.target.value)}>
-              {(EXPENSE_CATEGORIES[expenseMajor] || []).map(k => <option key={k} value={k}>{k}</option>)}
+              {(expenseCategories[expenseMajor] || []).map(k => <option key={k} value={k}>{k}</option>)}
             </select>
           </div>
         </div>
 
         <button className="btn btn-primary mt-4" onClick={handleSave}>
+          設定を保存する
+        </button>
+      </div>
+
+      <div className="glass-panel mb-6">
+        <h3 className="mb-4">カテゴリ設定</h3>
+        <p className="text-muted mb-4" style={{ fontSize: '0.85rem' }}>※ここで追加・削除した内容は「設定を保存する」ボタンを押すと反映されます。</p>
+        <div className="tab-container mb-4">
+          <div className={`tab-button ${catTab === 'expense' ? 'active' : 'inactive'}`} onClick={() => setCatTab('expense')}>支出カテゴリ</div>
+          <div className={`tab-button ${catTab === 'income' ? 'active' : 'inactive'}`} onClick={() => setCatTab('income')}>収入カテゴリ</div>
+        </div>
+
+        <div className="form-group">
+           <label className="form-label">大カテゴリ</label>
+           <select value={selectedMajorCat} onChange={e => setSelectedMajorCat(e.target.value)}>
+             {Object.keys(currentCategories).map(k => <option key={k} value={k}>{k}</option>)}
+           </select>
+           <div className="flex gap-2 mt-2">
+             <input type="text" placeholder="新しい大カテゴリ" value={newMajor} onChange={e => setNewMajor(e.target.value)} />
+             <button className="btn btn-secondary" style={{width: 'auto', flexShrink: 0}} onClick={handleAddMajor}>追加</button>
+             {selectedMajorCat && (
+               <button className="btn btn-secondary" style={{width: 'auto', flexShrink: 0, color: 'var(--danger)'}} onClick={handleDeleteMajor}>削除</button>
+             )}
+           </div>
+        </div>
+
+        {selectedMajorCat && currentCategories[selectedMajorCat] && (
+          <div className="form-group mt-4 pt-4" style={{ borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+            <label className="form-label">小カテゴリ ({selectedMajorCat})</label>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {currentCategories[selectedMajorCat].length === 0 && <span className="text-muted" style={{ fontSize: '0.85rem' }}>小カテゴリはありません</span>}
+              {currentCategories[selectedMajorCat].map(minor => (
+                <span key={minor} style={{background: 'rgba(0,0,0,0.05)', padding: '4px 10px', borderRadius: '16px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid rgba(0,0,0,0.1)'}}>
+                  {minor}
+                  <button onClick={() => handleDeleteMinor(minor)} style={{background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0 2px', fontSize: '1rem'}}>×</button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input type="text" placeholder="新しい小カテゴリ" value={newMinor} onChange={e => setNewMinor(e.target.value)} />
+              <button className="btn btn-secondary" style={{width: 'auto', flexShrink: 0}} onClick={handleAddMinor}>追加</button>
+            </div>
+          </div>
+        )}
+        
+        <button className="btn btn-primary mt-6" onClick={handleSave}>
           設定を保存する
         </button>
       </div>
