@@ -8,7 +8,7 @@ const COLORS = [
   '#84cc16', '#14b8a6'
 ];
 
-const AnalysisView = ({ transactions, settings }) => {
+const AnalysisView = ({ transactions, onEditTransaction, settings }) => {
   const person1 = settings?.person1Name || 'Rikako';
   const person2 = settings?.person2Name || 'Sanari';
 
@@ -414,6 +414,7 @@ const AnalysisView = ({ transactions, settings }) => {
           title={selectedMajor ? `「${selectedMajor}」の取引` : 'この期間の取引一覧'}
           transactions={displayTransactions} 
           settings={settings} 
+          onEditTransaction={onEditTransaction}
           // onDeleteTransaction は渡さないことで削除ボタンを非表示にする
         />
       </div>
