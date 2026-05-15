@@ -112,7 +112,10 @@ function App() {
   };
 
   const handleUpdateTransaction = async (updatedTx) => {
-    setTransactions(prev => prev.map(t => t.id === updatedTx.id ? updatedTx : t));
+    setTransactions(prev => {
+      const filtered = prev.filter(t => t.id !== updatedTx.id);
+      return [updatedTx, ...filtered];
+    });
     setEditingTransaction(null);
     
     const { error } = await supabase.from('transactions').update({
