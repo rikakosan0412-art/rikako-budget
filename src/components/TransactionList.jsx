@@ -25,6 +25,14 @@ const TransactionList = ({ transactions, onDeleteTransaction, onEditTransaction,
     return '';
   };
 
+  const getCategoryDisplay = (t) => {
+    if (t.category) return t.category;
+    if (t.majorCategory) {
+      return t.subCategory ? `${t.majorCategory} (${t.subCategory})` : t.majorCategory;
+    }
+    return '未分類';
+  };
+
   // 日付ごとにグループ化
   const groupedTransactions = transactions.reduce((acc, t) => {
     if (!acc[t.date]) acc[t.date] = [];
@@ -75,7 +83,7 @@ const TransactionList = ({ transactions, onDeleteTransaction, onEditTransaction,
                     >
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.95rem' }}>{t.category || '未分類'}</span>
+                          <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.95rem' }}>{getCategoryDisplay(t)}</span>
                           <span style={{ 
                             fontSize: '0.7rem', 
                             background: t.payer === 'person1' ? 'rgba(79, 70, 229, 0.1)' : 'rgba(100, 116, 139, 0.1)', 
