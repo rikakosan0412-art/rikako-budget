@@ -35,11 +35,12 @@ export async function parseReceipt(imageFile) {
     throw new Error("Gemini API key is not configured.");
   }
 
-  // Use gemini-flash-latest which has been verified to work with the user's API key
-  const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+  // Use gemini-2.5-flash as requested
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const prompt = `
 あなたは優秀な家計簿アシスタントです。
+現在の年は${new Date().getFullYear()}年です。日付は必ず西暦のYYYY-MM-DD形式で出力してください。和暦（令和など）で記載されている場合も西暦に変換してください。
 提供されたレシートの画像から、以下の情報を抽出し、JSON形式で返してください。
 
 1. date: レシートの日付。YYYY-MM-DD 形式の文字列。
@@ -104,10 +105,11 @@ export async function parseText(textInput) {
     throw new Error("Gemini API key is not configured.");
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   const prompt = `
 あなたは優秀な家計簿アシスタントです。
+現在の年は${new Date().getFullYear()}年です。日付は必ず西暦のYYYY-MM-DD形式で出力してください。和暦（令和など）で記載されている場合も西暦に変換してください。
 以下のユーザーのつぶやき（自然言語）から、支出の情報を抽出し、JSON形式で返してください。
 
 つぶやき: "${textInput}"
