@@ -4,6 +4,7 @@ import AnalysisView from './components/AnalysisView';
 import SettingsView from './components/SettingsView';
 import TransactionForm from './components/TransactionForm';
 import { supabase } from './lib/supabaseClient';
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from './constants/categories';
 
 const IconRecord = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -46,6 +47,8 @@ function App() {
     defaultExpenseMinor: '食料品',
     person1Name: 'Rikako',
     person2Name: 'Sanari',
+    expenseCategories: EXPENSE_CATEGORIES,
+    incomeCategories: INCOME_CATEGORIES
   });
   const [transactions, setTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,6 +66,8 @@ function App() {
           defaultExpenseMinor: settingsData.default_expense_minor || '食料品',
           person1Name: settingsData.person1_name || 'Rikako',
           person2Name: settingsData.person2_name || 'Sanari',
+          expenseCategories: settingsData.expense_categories || EXPENSE_CATEGORIES,
+          incomeCategories: settingsData.income_categories || INCOME_CATEGORIES
         });
       }
 
@@ -152,6 +157,8 @@ function App() {
       default_expense_minor: newSettings.defaultExpenseMinor,
       person1_name: newSettings.person1Name,
       person2_name: newSettings.person2Name,
+      expense_categories: newSettings.expenseCategories,
+      income_categories: newSettings.incomeCategories,
       updated_at: new Date().toISOString()
     });
   };
