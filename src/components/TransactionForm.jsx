@@ -189,7 +189,7 @@ const TransactionForm = ({ onAddTransaction, onUpdateTransaction, initialData, s
       type,
       date,
       payer,
-      forWhom: type === 'expense' ? forWhom : null,
+      forWhom: type === 'expense' ? forWhom : 'both',
       amount: Number(amount),
       majorCategory,
       subCategory,
